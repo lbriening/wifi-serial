@@ -2,35 +2,43 @@
  */
 #include "Arduino.h"
 
+#include <LittleFS.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
 #include <ESPAsyncWebServer.h>
 
+#include "wifi_info.h"
 
 // const char *ssid = "esp-webserver";
 // const char *password = "password";
 
-const char *ssid = "gnutard";
-const char *password = "compiledwithgcc";
-
 AsyncWebServer server(80);
 
-const char *webpage =
-	"<!DOCTYPE html>"
-	"<html>"
-	"<body>"
-		"<h1>ESP WiFi Serial</h1>"
-		"<div class=\"message-text\" contentEditable>""</div>"
-	"</body>"
-	"</html>"
-	;
+const char *webpage = "";
+
+char* read_file(String file_name) {
+	File f = LittleFS.open(file_name, "r");
+	if(!f) {
+		Serial.println("Failed to open file for reading");
+		return NULL;
+	}
+	char* b = (char*)malloc(f.size()+1);
+	
+	f.readBytes(b, f.size());
+	f.close();
+	return b;
+}
 
 void handle_root(AsyncWebServerRequest *request) {
-  request->send(200, "text/plain", webpage);
+  request->send(200, "text/html", webpage);
 }
 
 void not_found(AsyncWebServerRequest *request) {
   request->send(404, "text/plain", "Not found");
+}
+
+void get_rx(AsyncWebServerRequest *request) {
+  request->send(200, "text/plain", "HELLO WORLD!\r\n");
 }
 
 void setup() {
@@ -55,13 +63,21 @@ void setup() {
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
 
+  if(!LittleFS.begin()) {
+	  Serial.println("An Error has occurred while mounting LittleFS");
+	  return;
+  }
+
+  webpage = read_file("index.html");
+
   if(WiFi.status() == WL_CONNECTED) {
 	  if(MDNS.begin("esp8266")) {
 		Serial.println("MDNS started");
 	  }
   }
 
-  server.on("/", handle_root);
+  server.on("/", HTTP_GET, handle_root);
+  server.on("/rx", HTTP_GET, get_rx);
   server.onNotFound(not_found);
 
   server.begin();

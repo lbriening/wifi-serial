@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+	.tx-input {
+		border: 1px solid black;
+		width: 90%;
+	}
+	.tx-text {
+		color: green;
+	}
+	.uart-text {
+		border: 1px solid black;
+		min-height: 300px;
+	}
+	.row {
+		display: table;
+	}
+	.row-elem {
+		display: table-cell;
+	}
+
+</style>
+<script>
+	function init() {
+		var input = document.getElementById("tx-input");
+
+		input.addEventListener("keypress", function(event) {
+			if(event.key === "Enter") {
+				event.preventDefault();
+				sendMessage();
+			}
+		});
+	}
+
+	function sendMessage() {
+		var input = document.getElementById("tx-input");
+		var msg = input.textContent;
+		document.getElementById("messagebox").innerHTML += ("<p class=\"tx-text\">" + msg + "</p>");
+		input.textContent = "";
+	}
+	function clearMessages() {
+		document.getElementById("messagebox").innerHTML = "";
+	}
+</script>
+</head>
+<body onload="init()">
+   <h1>ESP WiFi Serial</h1>
+   <p>TX</p>
+   <div class="row">
+	   <div id="tx-input" class="tx-input row-elem" contentEditable></div> 
+	   <button type="button" onclick="sendMessage()">Send</button>
+	   <button class="row-elem" type="button" onclick="clearMessages()">Clear</button>
+   </div>
+   <p>RX</p>
+   <div id="messagebox" class="uart-text">
+   </div>
+</body>
+</html>
